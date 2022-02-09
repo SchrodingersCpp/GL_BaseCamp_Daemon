@@ -1,0 +1,18 @@
+processes:
+  - name: a
+    executable-path: ./processes/a
+    stdout-config:
+      file: ./logs/example_app1.log
+      mode: append
+    cmd-arguments:
+      - option-name: 02.11.2000
+      - option-name: Yezghor
+      - option-name: Vitaliy
+  - name: b
+    executable-path: ./processes/b
+    stdout-config:
+      file: ./logs/example_app2.log
+      mode: truncate
+    cmd-arguments:
+      - option-name: 3
+      - option-name: 4
