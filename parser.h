@@ -5,26 +5,31 @@
 
 #include <string>
 #include <vector>
-
-#include <fstream>
-#include <cassert>
+#include <map>
 
 using std::string;
 using std::vector;
 using vecstr = vector<string>;
+using dict = std::map<string, string>;
 
-class Parser: public IParser {
+class Parser: public IParser
+{
  public:
+  Parser();
+  
   void SetFilePath(string& path);
   vector<DataProcess>* GetProcessData();
-void test();
+void TEST();// TO BE DELETED TO BE DELETED TO BE DELETED TO BE DELETED TO BE DELETED
   
  private:
-  string yamlFilePath;
-  vecstr yamlContent;
-  vector<DataProcess> procs;
+  dict yaml_flags_;
+  string yaml_file_path_;
+  vecstr yaml_content_;
+  vector<DataProcess> procs_;
   
-  void readYAML();
+  void SetYAMLFlags();
+  void ReadYAML();
+  void ValidYAML();
 };
 
 #endif // PARSER_H
