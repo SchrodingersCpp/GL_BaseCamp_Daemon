@@ -16,9 +16,7 @@ Logger* Logger::logger_ = nullptr;
 Logger::Logger()
 {
   stdout_config_ = new STDOutConfig;
-  stdout_config_->mode = kSTDOutModeTruncate;
-  stdout_config_->path = string(kLogDefaultPathFile);
-  first_file_open_flag_ = true;
+  SetSTDOutConfig(kSTDOutModeTruncate, kLogDefaultPathFile);
 }
 
 Logger* Logger::GetLogger(void)
@@ -42,6 +40,11 @@ void Logger::SetSTDOutConfig(const STDOutMode& mode, const string& path)
   config.mode = mode;
   config.path = path;
   SetSTDOutConfig(config);
+}
+
+void Logger::SetSTDOutConfig(const STDOutMode& mode, const char* path)
+{
+  SetSTDOutConfig(mode, string(path));
 }
 
 void Logger::PrintMessage(const string& message)
