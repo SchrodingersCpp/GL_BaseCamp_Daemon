@@ -30,7 +30,7 @@ Logger* Logger::GetLogger(void)
   return logger_;
 }
 
-void Logger::SetSTDOutConfig(STDOutConfig& config)
+void Logger::SetSTDOutConfig(const STDOutConfig& config)
 {
   *stdout_config_ = config;
   first_file_open_flag_ = true;
