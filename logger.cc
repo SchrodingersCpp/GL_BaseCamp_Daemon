@@ -36,7 +36,7 @@ void Logger::SetSTDOutConfig(STDOutConfig& config)
   first_file_open_flag_ = true;
 }
 
-void Logger::PrintMessage(string& message)
+void Logger::PrintMessage(const string& message)
 {
   time_t time_message = time(NULL);
   char time_message_string[kSizeStringTimeMessage];
@@ -51,4 +51,9 @@ void Logger::PrintMessage(string& message)
     first_file_open_flag_ = false;
   }
   logger_out.close();
+}
+
+void Logger::PrintMessage(const char* message)
+{
+  PrintMessage(string(message));
 }
