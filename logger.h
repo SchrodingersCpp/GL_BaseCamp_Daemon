@@ -1,3 +1,6 @@
+#ifndef LOGGER_H
+#define LOGGER_H
+
 #include "stdout_config.h"
 #include "ilogger.h"
 #include <string>
@@ -17,3 +20,5 @@ class Logger : public ILogger
     STDOutConfig* stdout_config_;
     bool first_file_open_flag_;
 };
+
+#endif // LOGGER_H
