@@ -12,6 +12,7 @@ class Logger : public ILogger
   public:
     static Logger* GetLogger(void);
     void SetSTDOutConfig(const STDOutConfig& config);
+    void SetSTDOutConfig(const STDOutMode& mode, const string& path);
     virtual void PrintMessage(const string& message) override;
     virtual void PrintMessage(const char* message) override;
   private:

@@ -36,6 +36,14 @@ void Logger::SetSTDOutConfig(const STDOutConfig& config)
   first_file_open_flag_ = true;
 }
 
+void Logger::SetSTDOutConfig(const STDOutMode& mode, const string& path)
+{
+  STDOutConfig config;
+  config.mode = mode;
+  config.path = path;
+  SetSTDOutConfig(config);
+}
+
 void Logger::PrintMessage(const string& message)
 {
   time_t time_message = time(NULL);
