@@ -13,10 +13,28 @@ const char* kLogDefaultPathFile = "./log.txt";
 
 Logger* Logger::logger_ = nullptr;
 
-Logger::Logger()
+Logger::Logger(void)
 {
   stdout_config_ = new STDOutConfig;
   SetSTDOutConfig(kSTDOutModeTruncate, kLogDefaultPathFile);
+}
+
+Logger::Logger(const STDOutConfig& config)
+{
+  stdout_config_ = new STDOutConfig;
+  SetSTDOutConfig(config);
+}
+
+Logger::Logger(const STDOutMode& mode, const string& path)
+{
+  stdout_config_ = new STDOutConfig;
+  SetSTDOutConfig(mode, path);
+}
+
+Logger::Logger(const STDOutMode& mode, const char* path)
+{
+  stdout_config_ = new STDOutConfig;
+  SetSTDOutConfig(mode, path);
 }
 
 Logger* Logger::GetLogger(void)
