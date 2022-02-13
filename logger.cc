@@ -59,6 +59,19 @@ Logger* Logger::GetLogger(const STDOutConfig& config)
   return logger_;
 }
 
+Logger* Logger::GetLogger(const STDOutMode& mode, const string& path)
+{
+  if(logger_ == nullptr)
+  {
+    logger_ = new Logger(mode, path);
+  }
+  else
+  {
+    logger_->SetSTDOutConfig(mode, path);
+  }
+  return logger_;
+}
+
 void Logger::SetSTDOutConfig(const STDOutConfig& config)
 {
   *stdout_config_ = config;
