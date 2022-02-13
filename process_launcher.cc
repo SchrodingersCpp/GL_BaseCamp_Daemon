@@ -17,9 +17,9 @@ void ProcessLauncher::printError(string processName, string text) {
 }
 
 
-void ProcessLauncher::SetProcessData(vector<DataProcess>& processes) {
+void ProcessLauncher::SetProcessData(const vector<DataProcess>& processes) {
 
-    for(auto process: processes) {
+    for(const auto &process: processes) {
         
         if (!isPathExist(process.executable_path)) {
             printError(process.name, "Executable-path: file doesn't exist.");    
@@ -31,7 +31,7 @@ void ProcessLauncher::SetProcessData(vector<DataProcess>& processes) {
             continue;
         }
 
-        string command(process.executable_path);
+        string command("setsid " + process.executable_path);
 
         for (auto arg: process.cmd_arguments) {
             command.append(" ");
@@ -41,11 +41,6 @@ void ProcessLauncher::SetProcessData(vector<DataProcess>& processes) {
         STDOutMode mode = process.stdout_config.mode;
         
         (mode == kSTDOutModeAppend) ? command.append(" >> ") : command.append(" > ");
-        /*if (mode == kSTDOutModeAppend) {
-            command.append(" >> ");
-        } else {
-            command.append(" > ");
-        }*/
         
         command.append(process.stdout_config.path);
 

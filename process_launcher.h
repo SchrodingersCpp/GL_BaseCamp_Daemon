@@ -10,7 +10,7 @@ private:
     bool isPathExist(string path);
     void printError(string processName, string text);
 public:
-    void SetProcessData(vector<DataProcess>& processes) override;
+    void SetProcessData(const vector<DataProcess>& processes) override;
 };
 
 #endif

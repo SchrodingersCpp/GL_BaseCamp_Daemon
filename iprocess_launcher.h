@@ -8,5 +8,5 @@ using std::vector;
 class IProcessLauncher
 {
   public:
-    virtual void SetProcessData(vector<DataProcess>& processes) = 0;  //Set data of prosesses
+    virtual void SetProcessData(const vector<DataProcess>& processes) = 0;  //Set data of prosesses
 };
