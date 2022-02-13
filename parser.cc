@@ -1,16 +1,9 @@
-#include <iostream> // TO BE DELETED TO BE DELETED TO BE DELETED TO BE DELETED TO BE DELETED
-
 #include "parser.h"
 
 #include <fstream>
 #include <cassert>
 
 Parser::Parser():yaml_file_path_{}, yaml_content_{}, procs_{}
-{
-  SetYAMLFlags();
-}
-
-void Parser::SetYAMLFlags()
 {
   yaml_flags_ = {{"flagProcesses",    "processes:"},
                  {"flagName",         " name:"},
@@ -31,6 +24,12 @@ void Parser::SetFilePath(string& path)
 vector<DataProcess>* Parser::GetProcessData()
 {
   ReadYAML();
+  FillProcesses();
+  
+  if (procs_.size() == 0)
+  {
+    return nullptr;
+  }
   
   return &procs_;
 }
@@ -72,10 +71,13 @@ void Parser::ValidYAML()
   yaml_flags_.erase("flagProcesses");
   
   // check if rest of YAML-file content has valid flags
-  for (auto& line : yaml_content_) {
+  for (auto& line : yaml_content_)
+  {
     bool validFlag{false};
-    for (auto& flag : yaml_flags_) {
-      if (line.find(flag.second) != string::npos) {
+    for (auto& flag : yaml_flags_)
+    {
+      if (line.find(flag.second) != string::npos)
+      {
         validFlag = true;
         break;
       }
@@ -84,29 +86,75 @@ void Parser::ValidYAML()
   }
 }
 
-void Parser::TEST() // TO BE DELETED TO BE DELETED TO BE DELETED TO BE DELETED TO BE DELETED
+void Parser::FillProcesses()
 {
-  std::cout << "TESTING\n-------\n";
-  for (string line : yaml_content_)
+  // delete unnecessary flags without values
+  yaml_flags_.erase("flagStdoutConfig");
+  yaml_flags_.erase("flagCmdArgs");
+  
+  for (auto& line : yaml_content_)
   {
-    std::cout << line << '\n';
+    for (auto& flag : yaml_flags_)
+    {
+      // check if line contains flag
+      const auto flagFound{line.find(flag.second)};
+      
+      if (flagFound != string::npos)
+      {
+        // create process struct at each "Name" flag
+        if (flag.first == "flagName") {procs_.push_back(DataProcess{});}
+        
+        string flagValue{};
+        GetFlagValue(flag.second, line, flagValue);
+        
+        // create and/or fill struct for single process
+        FillProcessStruct(flag.second, flagValue);
+        break;
+      }
+    }
   }
-  std::cout << "\n\n";
-  for (auto item : yaml_flags_)
-  {
-    std::cout << item.first << "\t\t" << item.second << '\n';
-  }
-  std::cout << "\n\n";
 }
 
-int main()
+void Parser::GetFlagValue(string& flag, string& line, string& flagValue)
 {
-  Parser p{};
-  string yaml{"/home/linux/Documents/config.yaml"};
-  p.SetFilePath(yaml);
-  p.GetProcessData();
+  // skip flag portion from line string
+  const auto i{line.find(flag) + flag.length()};
+  string value{line.substr(i)};
   
-p.TEST(); // TO BE DELETED TO BE DELETED TO BE DELETED TO BE DELETED TO BE DELETED
-  
-  return 0;
+  // trim leading and trailing whitespaces (if any)
+  const char whitespace[]{" \t"};
+  const auto iBegin{value.find_first_not_of(whitespace)};
+  const auto iFinal{value.find_last_not_of(whitespace)};
+  flagValue = value.substr(iBegin, iFinal - iBegin + 1);
+}
+
+// create and/or fill struct for single process
+void Parser::FillProcessStruct(string& flag, string& flagValue)
+{
+  if (flag == yaml_flags_["flagName"])
+  {
+    procs_.back().name = flagValue;
+    return;
+  }
+  else if (flag == yaml_flags_["flagExePath"])
+  {
+    procs_.back().executable_path = flagValue;
+    return;
+  }
+  else if (flag == yaml_flags_["flagFile"])
+  {
+    procs_.back().stdout_config.path = flagValue;
+    return;
+  }
+  else if (flag == yaml_flags_["flagMode"])
+  {
+    procs_.back().stdout_config.mode =
+        static_cast<STDOutMode>(flagValue == "append");
+    return;
+  }
+  else if (flag == yaml_flags_["flagOptionName"])
+  {
+    procs_.back().cmd_arguments.push_back(flagValue);
+    return;
+  }
 }
