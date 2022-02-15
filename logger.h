@@ -15,6 +15,7 @@ class Logger : public ILogger
 {
   public:
     static Logger* GetLogger();                                        // Return pointer on Logger.
+    static void DeleteLogger();
     void SetSTDOutConfig(const STDOutConfig& config);
     void SetSTDOutConfig(const STDOutMode& mode, const string& path);
     virtual void PrintMessage(const string& message) override;         // Print message in log file.

@@ -24,13 +24,19 @@ Logger::~Logger()
   delete stdout_config_;
 }
 
-Logger* Logger::GetLogger(void)
+Logger* Logger::GetLogger()
 {
   if(logger_ == nullptr)
   {
     logger_ = new Logger;
   }
   return logger_;
+}
+
+void Logger::DeleteLogger()
+{
+  delete logger_;
+  logger_ = nullptr;
 }
 
 void Logger::SetSTDOutConfig(const STDOutConfig& config)
