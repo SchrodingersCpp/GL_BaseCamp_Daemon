@@ -17,7 +17,6 @@ class Logger : public ILogger
     static Logger* GetLogger(void);                                        // Return pointer on Logger.
     static Logger* GetLogger(const STDOutConfig& config);
     static Logger* GetLogger(const STDOutMode& mode, const string& path);
-    static Logger* GetLogger(const STDOutMode& mode, const char* path);
     void SetSTDOutConfig(const STDOutConfig& config);
     void SetSTDOutConfig(const STDOutMode& mode, const string& path);
     void SetSTDOutConfig(const STDOutMode& mode, const char* path);
