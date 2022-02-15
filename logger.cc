@@ -86,11 +86,6 @@ void Logger::SetSTDOutConfig(const STDOutMode& mode, const string& path)
   SetSTDOutConfig(config);
 }
 
-void Logger::SetSTDOutConfig(const STDOutMode& mode, const char* path)
-{
-  SetSTDOutConfig(mode, string(path));
-}
-
 void Logger::PrintMessage(const string& message)
 {
   time_t time_message = time(NULL);
