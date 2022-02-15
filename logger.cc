@@ -13,22 +13,10 @@ const char* kLogDefaultPathFile = "./log.txt";
 
 Logger* Logger::logger_ = nullptr;
 
-Logger::Logger(void)
+Logger::Logger()
 {
   stdout_config_ = new STDOutConfig;
   SetSTDOutConfig(kSTDOutModeTruncate, kLogDefaultPathFile);
-}
-
-Logger::Logger(const STDOutConfig& config)
-{
-  stdout_config_ = new STDOutConfig;
-  SetSTDOutConfig(config);
-}
-
-Logger::Logger(const STDOutMode& mode, const string& path)
-{
-  stdout_config_ = new STDOutConfig;
-  SetSTDOutConfig(mode, path);
 }
 
 Logger* Logger::GetLogger(void)
@@ -36,32 +24,6 @@ Logger* Logger::GetLogger(void)
   if(logger_ == nullptr)
   {
     logger_ = new Logger;
-  }
-  return logger_;
-}
-
-Logger* Logger::GetLogger(const STDOutConfig& config)
-{
-  if(logger_ == nullptr)
-  {
-    logger_ = new Logger(config);
-  }
-  else
-  {
-    logger_->SetSTDOutConfig(config);
-  }
-  return logger_;
-}
-
-Logger* Logger::GetLogger(const STDOutMode& mode, const string& path)
-{
-  if(logger_ == nullptr)
-  {
-    logger_ = new Logger(mode, path);
-  }
-  else
-  {
-    logger_->SetSTDOutConfig(mode, path);
   }
   return logger_;
 }

@@ -14,16 +14,12 @@ using std::string;
 class Logger : public ILogger
 {
   public:
-    static Logger* GetLogger(void);                                        // Return pointer on Logger.
-    static Logger* GetLogger(const STDOutConfig& config);
-    static Logger* GetLogger(const STDOutMode& mode, const string& path);
+    static Logger* GetLogger();                                        // Return pointer on Logger.
     void SetSTDOutConfig(const STDOutConfig& config);
     void SetSTDOutConfig(const STDOutMode& mode, const string& path);
-    virtual void PrintMessage(const string& message) override;             // Print message in log file.
+    virtual void PrintMessage(const string& message) override;         // Print message in log file.
   private:
-    Logger(void);
-    Logger(const STDOutConfig& config);
-    Logger(const STDOutMode& mode, const string& path);
+    Logger();
     ~Logger() = default;
     static Logger* logger_;
     STDOutConfig* stdout_config_;
