@@ -7,14 +7,11 @@ using std::ios;
 using std::ios_base;
 using std::endl;
 
-const char* kFormatTimeMessage = "%m-%d-%Y %H:%M:%S ";
-const int kSizeStringTimeMessage = 21;
-const char* kLogDefaultPathFile = "./log.txt";
-
 Logger* Logger::logger_ = nullptr;
 
 Logger::Logger()
 {
+  const string kLogDefaultPathFile = "./log.txt";
   stdout_config_ = new STDOutConfig;
   logger_out_ = new ofstream;
   SetSTDOutConfig(kSTDOutModeTruncate, kLogDefaultPathFile);
@@ -64,9 +61,11 @@ void Logger::SetSTDOutConfig(const STDOutMode& mode, const string& path)
 
 void Logger::PrintMessage(const string& message)
 {
+  const string kFormatTimeMessage = "%m-%d-%Y %H:%M:%S ";
+  const int kSizeStringTimeMessage = 21;
   time_t time_message = time(NULL);
   char time_message_string[kSizeStringTimeMessage];
-  strftime(time_message_string, kSizeStringTimeMessage, kFormatTimeMessage, localtime(&time_message));
+  strftime(time_message_string, kSizeStringTimeMessage, kFormatTimeMessage.c_str(), localtime(&time_message));
   if(!logger_out_->is_open())
   {
     logger_out_->open(stdout_config_->path, stdout_config_->mode == kSTDOutModeTruncate ? ios::trunc : ios::app);
