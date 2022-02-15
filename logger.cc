@@ -1,7 +1,7 @@
 #include "logger.h"
-#include <fstream>
 #include <ctime>
 
+using std::string;
 using std::ofstream;
 using std::ios;
 using std::ios_base;
@@ -16,12 +16,18 @@ Logger* Logger::logger_ = nullptr;
 Logger::Logger()
 {
   stdout_config_ = new STDOutConfig;
+  logger_out_ = new ofstream;
   SetSTDOutConfig(kSTDOutModeTruncate, kLogDefaultPathFile);
 }
 
 Logger::~Logger()
 {
   delete stdout_config_;
+  if(logger_out_->is_open())
+  {
+    logger_out_->close();
+  }
+  delete logger_out_;
 }
 
 Logger* Logger::GetLogger()
@@ -42,7 +48,10 @@ void Logger::DeleteLogger()
 void Logger::SetSTDOutConfig(const STDOutConfig& config)
 {
   *stdout_config_ = config;
-  first_file_open_flag_ = true;
+  if(logger_out_->is_open())
+  {
+    logger_out_->close();
+  }
 }
 
 void Logger::SetSTDOutConfig(const STDOutMode& mode, const string& path)
@@ -57,15 +66,10 @@ void Logger::PrintMessage(const string& message)
 {
   time_t time_message = time(NULL);
   char time_message_string[kSizeStringTimeMessage];
-  ofstream logger_out;
-  ios_base::openmode logger_out_mode;
-  logger_out_mode = (stdout_config_->mode == kSTDOutModeTruncate && first_file_open_flag_) ? ios::trunc : ios::app;
   strftime(time_message_string, kSizeStringTimeMessage, kFormatTimeMessage, localtime(&time_message));
-  logger_out.open(stdout_config_->path, logger_out_mode);
-  if(logger_out.is_open())
+  if(!logger_out_->is_open())
   {
-    logger_out << time_message_string << message << endl;
-    first_file_open_flag_ = false;
+    logger_out_->open(stdout_config_->path, stdout_config_->mode == kSTDOutModeTruncate ? ios::trunc : ios::app);
   }
-  logger_out.close();
+  *logger_out_ << time_message_string << message << endl;
 }

@@ -4,8 +4,7 @@
 #include "stdout_config.h"
 #include "ilogger.h"
 #include <string>
-
-using std::string;
+#include <fstream>
 
 //This class is implement by pattern Singlton.
 //For getting pointer on class call static method GetLogger().
@@ -14,17 +13,17 @@ using std::string;
 class Logger : public ILogger
 {
   public:
-    static Logger* GetLogger();                                        // Return pointer on Logger.
+    static Logger* GetLogger();                                             // Return pointer on Logger.
     static void DeleteLogger();
     void SetSTDOutConfig(const STDOutConfig& config);
-    void SetSTDOutConfig(const STDOutMode& mode, const string& path);
-    virtual void PrintMessage(const string& message) override;         // Print message in log file.
+    void SetSTDOutConfig(const STDOutMode& mode, const std::string& path);
+    virtual void PrintMessage(const std::string& message) override;         // Print message in log file.
   private:
     Logger();
     ~Logger();
     static Logger* logger_;
     STDOutConfig* stdout_config_;
-    bool first_file_open_flag_;
+    std::ofstream* logger_out_;
 };
 
 #endif // LOGGER_H
