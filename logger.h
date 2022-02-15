@@ -24,7 +24,6 @@ class Logger : public ILogger
     Logger(void);
     Logger(const STDOutConfig& config);
     Logger(const STDOutMode& mode, const string& path);
-    Logger(const STDOutMode& mode, const char* path);
     ~Logger() = default;
     static Logger* logger_;
     STDOutConfig* stdout_config_;
