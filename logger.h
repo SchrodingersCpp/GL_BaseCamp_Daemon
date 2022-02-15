@@ -22,7 +22,6 @@ class Logger : public ILogger
     void SetSTDOutConfig(const STDOutMode& mode, const string& path);
     void SetSTDOutConfig(const STDOutMode& mode, const char* path);
     virtual void PrintMessage(const string& message) override;             // Print message in log file.
-    virtual void PrintMessage(const char* message) override;
   private:
     Logger(void);
     Logger(const STDOutConfig& config);

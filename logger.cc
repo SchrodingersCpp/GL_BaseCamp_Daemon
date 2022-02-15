@@ -120,8 +120,3 @@ void Logger::PrintMessage(const string& message)
   }
   logger_out.close();
 }
-
-void Logger::PrintMessage(const char* message)
-{
-  PrintMessage(string(message));
-}
