@@ -10,5 +10,4 @@ class ILogger
 {
   public:
     virtual void PrintMessage(const string& message) = 0;  //Print message in log
-    virtual void PrintMessage(const char* message) = 0;
 };
