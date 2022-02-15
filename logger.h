@@ -20,7 +20,7 @@ class Logger : public ILogger
     virtual void PrintMessage(const string& message) override;         // Print message in log file.
   private:
     Logger();
-    ~Logger() = default;
+    ~Logger();
     static Logger* logger_;
     STDOutConfig* stdout_config_;
     bool first_file_open_flag_;

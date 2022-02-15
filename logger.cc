@@ -19,6 +19,11 @@ Logger::Logger()
   SetSTDOutConfig(kSTDOutModeTruncate, kLogDefaultPathFile);
 }
 
+Logger::~Logger()
+{
+  delete stdout_config_;
+}
+
 Logger* Logger::GetLogger(void)
 {
   if(logger_ == nullptr)
