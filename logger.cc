@@ -12,19 +12,15 @@ Logger* Logger::logger_ = nullptr;
 Logger::Logger()
 {
   const string kLogDefaultPathFile = "./log.txt";
-  stdout_config_ = new STDOutConfig;
-  logger_out_ = new ofstream;
   SetSTDOutConfig(kSTDOutModeTruncate, kLogDefaultPathFile);
 }
 
 Logger::~Logger()
 {
-  delete stdout_config_;
-  if(logger_out_->is_open())
+  if(logger_out_.is_open())
   {
-    logger_out_->close();
+    logger_out_.close();
   }
-  delete logger_out_;
 }
 
 Logger* Logger::GetLogger()
@@ -44,10 +40,10 @@ void Logger::DeleteLogger()
 
 void Logger::SetSTDOutConfig(const STDOutConfig& config)
 {
-  *stdout_config_ = config;
-  if(logger_out_->is_open())
+  stdout_config_ = config;
+  if(logger_out_.is_open())
   {
-    logger_out_->close();
+    logger_out_.close();
   }
 }
 
@@ -66,9 +62,9 @@ void Logger::PrintMessage(const string& message)
   time_t time_message = time(NULL);
   char time_message_string[kSizeStringTimeMessage];
   strftime(time_message_string, kSizeStringTimeMessage, kFormatTimeMessage.c_str(), localtime(&time_message));
-  if(!logger_out_->is_open())
+  if(!logger_out_.is_open())
   {
-    logger_out_->open(stdout_config_->path, stdout_config_->mode == kSTDOutModeTruncate ? ios::trunc : ios::app);
+    logger_out_.open(stdout_config_.path, stdout_config_.mode == kSTDOutModeTruncate ? ios::trunc : ios::app);
   }
-  *logger_out_ << time_message_string << message << endl;
+  logger_out_ << time_message_string << message << endl;
 }

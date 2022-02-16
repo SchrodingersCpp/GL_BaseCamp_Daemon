@@ -22,8 +22,8 @@ class Logger : public ILogger
     Logger();
     ~Logger();
     static Logger* logger_;
-    STDOutConfig* stdout_config_;
-    std::ofstream* logger_out_;
+    STDOutConfig stdout_config_;
+    std::ofstream logger_out_;
 };
 
 #endif // LOGGER_H
