@@ -1,6 +1,6 @@
 #include <string>
 
-enum STDOutMode
+enum class STDOutMode
 {
   kSTDOutModeTruncate = 0,
   kSTDOutModeAppend

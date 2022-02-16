@@ -6,7 +6,7 @@ Logger* Logger::logger_ = nullptr;
 Logger::Logger()
 {
   const std::string kLogDefaultPathFile = "./log.txt";
-  SetSTDOutConfig(kSTDOutModeTruncate, kLogDefaultPathFile);
+  SetSTDOutConfig(STDOutMode::kSTDOutModeTruncate, kLogDefaultPathFile);
 }
 
 Logger::~Logger()
@@ -58,7 +58,7 @@ void Logger::PrintMessage(const std::string& message)
   strftime(time_message_string, kSizeStringTimeMessage, kFormatTimeMessage.c_str(), localtime(&time_message));
   if(!logger_out_.is_open())
   {
-    logger_out_.open(stdout_config_.path, stdout_config_.mode == kSTDOutModeTruncate ? std::ios::trunc : std::ios::app);
+    logger_out_.open(stdout_config_.path, stdout_config_.mode == STDOutMode::kSTDOutModeTruncate ? std::ios::trunc : std::ios::app);
   }
   logger_out_ << time_message_string << message << std::endl;
 }
