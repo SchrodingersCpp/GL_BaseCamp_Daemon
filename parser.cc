@@ -3,124 +3,113 @@
 #include <fstream>
 #include <cassert>
 
-Parser::Parser():yaml_file_path_{}, yaml_content_{}, procs_{}
+/******** public members *********/
+
+Parser::Parser(): yaml_file_path_{}, yaml_content_{}, procs_{}
 {
-  yaml_flags_ = {{"flagProcesses",    "processes:"},
-                 {"flagName",         " name:"},
-                 {"flagExePath",      " executable-path:"},
-                 {"flagStdoutConfig", " stdout-config:"},
-                 {"flagFile",         " file:"},
-                 {"flagMode",         " mode:"},
-                 {"flagCmdArgs",      " cmd-arguments:"},
-                 {"flagOptionName",   " option-name:"}
-                };
+  valid_flags_[static_cast<int>(yamlFlags::kFlagProcess)]      = "processes:";
+  valid_flags_[static_cast<int>(yamlFlags::kFlagName)]         = "- name:";
+  valid_flags_[static_cast<int>(yamlFlags::kFlagExePath)]      = "    executable-path:";
+  valid_flags_[static_cast<int>(yamlFlags::kFlagStdoutConfig)] = "    stdout-config:";
+  valid_flags_[static_cast<int>(yamlFlags::kFlagFile)]         = "        file:";
+  valid_flags_[static_cast<int>(yamlFlags::kFlagMode)]         = "        mode:";
+  valid_flags_[static_cast<int>(yamlFlags::kFlagCmdArgs)]      = "    cmd-arguments:";
+  valid_flags_[static_cast<int>(yamlFlags::kFlagOptionName)]   = "        - option-name:";
 }
 
-void Parser::SetFilePath(string& path)
-{
-  yaml_file_path_ = path;
-}
+void Parser::SetFilePath(const std::string& path) { yaml_file_path_ = path; }
 
-vector<DataProcess>* Parser::GetProcessData()
+std::vector<DataProcess>* Parser::GetProcessData()
 {
-  ReadYAML();
+  ReadYAMLFile();
   FillProcesses();
-  
-  if (procs_.size() == 0)
-  {
-    return nullptr;
-  }
-  
+  if (procs_.empty()) { return nullptr; }
   return &procs_;
 }
 
-void Parser::ReadYAML()
+/******** end of public members ********/
+
+/******** private members ********/
+
+void Parser::ReadYAMLFile()
 {
   // open YAML-file
   std::ifstream yaml_file{yaml_file_path_};
-  
   // check if YAML-file exists
   assert((yaml_file.is_open() == true) && "File not found!");
-  
   // read YAML-file content
-  string yaml_line{};
+  std::string yaml_line{};
   while (std::getline(yaml_file, yaml_line))
   {
-    if (yaml_line != "") // exclude empty lines
-    {
-      yaml_content_.push_back(yaml_line);
-    }
+    if (!yaml_line.empty()) { yaml_content_.push_back(yaml_line); }
   }
-  
   // close YAML-file
   yaml_file.close();
-  
   // check if YAML-content is valid
-  ValidYAML();
+  YAMLValidityCheck();
 }
 
-// check if YAML-file content is valid
-void Parser::ValidYAML()
+void Parser::YAMLValidityCheck()
 {
   // check if YAML-file content starts with "processes" flag
-  assert((yaml_content_[0].find(yaml_flags_["flagProcesses"]) != string::npos)
-         && "YAML should start with 'processes:' key!");
-  
-  // delete "processes" flag line (not needed for further processing)
-  yaml_content_.erase(yaml_content_.begin());
-  yaml_flags_.erase("flagProcesses");
-  
+  assert((yaml_content_[0].find(
+        valid_flags_[static_cast<int>(yamlFlags::kFlagProcess)]) !=
+        std::string::npos) && "YAML should start with 'processes:' key!");
   // check if rest of YAML-file content has valid flags
   for (auto& line : yaml_content_)
   {
-    bool validFlag{false};
-    for (auto& flag : yaml_flags_)
+    bool isValidFlag{false};
+    for (auto& flag : valid_flags_)
     {
-      if (line.find(flag.second) != string::npos)
+      if (line.find(flag) != std::string::npos)
       {
-        validFlag = true;
+        isValidFlag = true;
         break;
       }
     }
-    assert(validFlag == true && "YAML contains invalid flag!");
+    assert(isValidFlag == true && "YAML contains invalid flag!");
   }
 }
 
 void Parser::FillProcesses()
 {
-  // delete unnecessary flags without values
-  yaml_flags_.erase("flagStdoutConfig");
-  yaml_flags_.erase("flagCmdArgs");
-  
   for (auto& line : yaml_content_)
   {
-    for (auto& flag : yaml_flags_)
+    for (auto& flag : valid_flags_)
     {
       // check if line contains flag
-      const auto flagFound{line.find(flag.second)};
-      
-      if (flagFound != string::npos)
+      const auto flagFound{line.find(flag)};
+      if (flagFound != std::string::npos)
       {
         // create process struct at each "Name" flag
-        if (flag.first == "flagName") {procs_.push_back(DataProcess{});}
-        
-        string flagValue{};
-        GetFlagValue(flag.second, line, flagValue);
-        
-        // create and/or fill struct for single process
-        FillProcessStruct(flag.second, flagValue);
-        break;
+        if (flag == valid_flags_[static_cast<int>(yamlFlags::kFlagName)])
+        {
+          procs_.push_back(DataProcess{});
+        }
+        if ((flag !=
+             valid_flags_[static_cast<int>(yamlFlags::kFlagProcess)]) &&
+            (flag !=
+             valid_flags_[static_cast<int>(yamlFlags::kFlagStdoutConfig)]) &&
+            (flag !=
+             valid_flags_[static_cast<int>(yamlFlags::kFlagCmdArgs)]))
+        {
+          std::string flagValue{};
+          GetFlagValue(flag, line, flagValue);
+          // create and/or fill struct for single process
+          FillProcessStruct(flag, flagValue);
+          break;
+        }
       }
     }
   }
 }
 
-void Parser::GetFlagValue(string& flag, string& line, string& flagValue)
+void Parser::GetFlagValue(std::string& flag, std::string& line,
+                          std::string& flagValue)
 {
   // skip flag portion from line string
   const auto i{line.find(flag) + flag.length()};
-  string value{line.substr(i)};
-  
+  std::string value{line.substr(i)};
   // trim leading and trailing whitespaces (if any)
   const char whitespace[]{" \t"};
   const auto iBegin{value.find_first_not_of(whitespace)};
@@ -128,33 +117,29 @@ void Parser::GetFlagValue(string& flag, string& line, string& flagValue)
   flagValue = value.substr(iBegin, iFinal - iBegin + 1);
 }
 
-// create and/or fill struct for single process
-void Parser::FillProcessStruct(string& flag, string& flagValue)
+void Parser::FillProcessStruct(std::string& flag, std::string& flagValue)
 {
-  if (flag == yaml_flags_["flagName"])
+  if (flag == valid_flags_[static_cast<int>(yamlFlags::kFlagName)])
   {
     procs_.back().name = flagValue;
-    return;
   }
-  else if (flag == yaml_flags_["flagExePath"])
+  else if (flag == valid_flags_[static_cast<int>(yamlFlags::kFlagExePath)])
   {
     procs_.back().executable_path = flagValue;
-    return;
   }
-  else if (flag == yaml_flags_["flagFile"])
+  else if (flag == valid_flags_[static_cast<int>(yamlFlags::kFlagFile)])
   {
     procs_.back().stdout_config.path = flagValue;
-    return;
   }
-  else if (flag == yaml_flags_["flagMode"])
+  else if (flag == valid_flags_[static_cast<int>(yamlFlags::kFlagMode)])
   {
     procs_.back().stdout_config.mode =
         static_cast<STDOutMode>(flagValue == "append");
-    return;
   }
-  else if (flag == yaml_flags_["flagOptionName"])
+  else if (flag == valid_flags_[static_cast<int>(yamlFlags::kFlagOptionName)])
   {
     procs_.back().cmd_arguments.push_back(flagValue);
-    return;
   }
 }
+
+/******** end of private members ********/
