@@ -1,8 +1,6 @@
 #include <string>
 
-using std::string;
-
-enum STDOutMode
+enum class STDOutMode
 {
   kSTDOutModeTruncate = 0,
   kSTDOutModeAppend
@@ -10,6 +8,6 @@ enum STDOutMode
 
 struct STDOutConfig
 {
-  string path;
+  std::string path;
   STDOutMode mode;
 };

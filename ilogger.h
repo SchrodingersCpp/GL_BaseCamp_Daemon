@@ -1,10 +1,11 @@
 #include <string>
 
-using std::string;
+//This class is implement pattern Singlton.
+//For getting pointer on class call static method GetLogger()
+//Example : Logger* logger = Logger::GetLogger();
 
 class ILogger
 {
   public:
-    virtual ILogger* GetLogger(void) = 0;            //Return pointer on object ILogger. This class is implement pattern Singlton. 
-    virtual void PrintMessage(string& message) = 0;  //Print message in log
+    virtual void PrintMessage(const std::string& message) = 0;  //Print message in log
 };
