@@ -4,20 +4,20 @@
 #include "process_launcher.h"
 
 
-bool ProcessLauncher::isPathExist(string path) {
+bool ProcessLauncher::isPathExist(std::string path) {
     std::ifstream file(path);
     bool result = file.is_open();
     file.close();
     return result;
 }
 
-void ProcessLauncher::printError(string processName, string text) {
+void ProcessLauncher::printError(std::string processName, std::string text) {
     std::cout << "##### Error run " << processName << " process #####" << std::endl; 
     std::cout << text << std::endl; 
 }
 
 
-void ProcessLauncher::SetProcessData(const vector<DataProcess>& processes) {
+void ProcessLauncher::SetProcessData(std::vector<DataProcess>& processes) {
 
     for(const auto &process: processes) {
         
@@ -31,7 +31,7 @@ void ProcessLauncher::SetProcessData(const vector<DataProcess>& processes) {
             continue;
         }
 
-        string command("setsid " + process.executable_path);
+        std::string command("setsid " + process.executable_path);
 
         for (auto arg: process.cmd_arguments) {
             command.append(" ");
