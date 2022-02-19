@@ -2,6 +2,7 @@
 #include <fstream>
 #include <cstring>
 #include "process_launcher.h"
+#include "logger.h"
 
 
 bool ProcessLauncher::isPathExist(std::string path) {
@@ -11,23 +12,20 @@ bool ProcessLauncher::isPathExist(std::string path) {
     return result;
 }
 
-void ProcessLauncher::printError(std::string processName, std::string text) {
-    std::cout << "##### Error run " << processName << " process #####" << std::endl; 
-    std::cout << text << std::endl; 
-}
-
 
 void ProcessLauncher::SetProcessData(std::vector<DataProcess>& processes) {
+
+    Logger* logger = Logger::GetLogger();
 
     for(const auto &process: processes) {
         
         if (!isPathExist(process.executable_path)) {
-            printError(process.name, "Executable-path: file doesn't exist.");    
+            logger->PrintMessage("Error run " + process.name + ". Executable-path: file doesn't exist.");
             continue;
         }
 
         if (!isPathExist(process.stdout_config.path)) {
-            printError(process.name, "stdout-config: file doesn't exist.");
+            logger->PrintMessage("Error run " + process.name + ". Stdout-config: file doesn't exist.");
             continue;
         }
 
@@ -40,21 +38,24 @@ void ProcessLauncher::SetProcessData(std::vector<DataProcess>& processes) {
         
         STDOutMode mode = process.stdout_config.mode;
         
-        (mode == kSTDOutModeAppend) ? command.append(" >> ") : command.append(" > ");
+        (mode == STDOutMode::kSTDOutModeAppend) ? command.append(" >> ") : command.append(" > ");
         
         command.append(process.stdout_config.path);
 
-        std::cout << "Run " << process.name << " process" << std::endl;
+        logger->PrintMessage("Run " + process.name + " process");
         int status = system(command.c_str());
-
-        if (status < 0)
-            std::cout << "Error: " << std::strerror(errno) << '\n';
+        
+        if (status < 0) {
+            const char* error = std::strerror(errno);
+            std::string error_message(error);
+            logger->PrintMessage("Error: " + error_message);
+        }
         else
         {
             if (WIFEXITED(status))
-                std::cout << "Program " << process.name << " returned normally, exit code " << WEXITSTATUS(status) << '\n';
+                logger->PrintMessage("Program " + process.name + " returned normally, exit code " + std::to_string(WEXITSTATUS(status)));
             else
-                std::cout << "Program " << process.name << " exited abnormaly\n";
+                logger->PrintMessage("Program " + process.name + " exited abnormaly");
         }   
     }
 }
