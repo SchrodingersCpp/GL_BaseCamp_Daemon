@@ -1,3 +1,0 @@
-02-19-2022 23:34:40 Error run a. Executable-path: file doesn't exist.
-02-19-2022 23:34:40 Run b process
-02-19-2022 23:34:40 Program b returned normally, exit code 0
