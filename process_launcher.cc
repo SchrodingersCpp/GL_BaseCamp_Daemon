@@ -1,13 +1,14 @@
-#include <iostream>
-#include <fstream>
-#include <cstring>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+
+#include <fstream>
+#include <cstring>
+
 #include "process_launcher.h"
 #include "logger.h"
 
-bool ProcessLauncher::isPathExist(std::string path) 
+bool ProcessLauncher::IsPathExist(std::string path) 
 {
     std::ifstream file(path);
     bool result = file.is_open();
@@ -20,12 +21,12 @@ void ProcessLauncher::SetProcessData(std::vector<DataProcess>& processes)
     Logger* logger = Logger::GetLogger();
     for(const auto &process: processes) 
     {
-        if (!isPathExist(process.executable_path)) 
+        if (!IsPathExist(process.executable_path)) 
         {
             logger->PrintMessage("Error run " + process.name + ". Executable-path: file doesn't exist.");
             continue;
         }
-        if (!isPathExist(process.stdout_config.path)) 
+        if (!IsPathExist(process.stdout_config.path)) 
         {
             logger->PrintMessage("Error run " + process.name + ". Stdout-config: file doesn't exist.");
             continue;
@@ -37,7 +38,9 @@ void ProcessLauncher::SetProcessData(std::vector<DataProcess>& processes)
             // error
             logger->PrintMessage("Fork failed (process " + process.name + ")");
             continue;
-        } else if(pid == 0) {
+        } 
+        else if (pid == 0) 
+        {
             // child process
             logger->PrintMessage("Run " + process.name + " process.");
             const char **argv = new const char*[process.cmd_arguments.size()+2]; // + 2 = program_name, NULL

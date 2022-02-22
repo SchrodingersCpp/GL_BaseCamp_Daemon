@@ -5,9 +5,8 @@
 
 class ProcessLauncher : public IProcessLauncher
 {
-    
 private:
-    bool isPathExist(std::string path);
+    bool IsPathExist(std::string path);
 public:
     void SetProcessData(std::vector<DataProcess>& processes) override;
 };
