@@ -49,4 +49,8 @@
 ### VisualStudioCode Patch ###
 # Ignore all local history of files
 .history
+<<<<<<< HEAD
 .ionide
+=======
+.ionide
+>>>>>>> 80c0b0627bccbbc89411045b964f6ce01efe425a

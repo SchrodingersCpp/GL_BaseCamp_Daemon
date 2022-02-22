@@ -50,7 +50,9 @@ void ProcessLauncher::SetProcessData(std::vector<DataProcess>& processes)
             if (mode == STDOutMode::kSTDOutModeAppend) 
             {
                 redirect_fd = open(process.stdout_config.path.c_str(), O_CREAT | O_APPEND | O_WRONLY);
-            } else {
+            } 
+            else 
+            {
                 redirect_fd = open(process.stdout_config.path.c_str(), O_CREAT | O_TRUNC | O_WRONLY);
             }
             dup2(redirect_fd, STDOUT_FILENO);
@@ -59,13 +61,17 @@ void ProcessLauncher::SetProcessData(std::vector<DataProcess>& processes)
             {
                 fprintf(stderr, "Error executing %s\n", process.executable_path.c_str());
             }
-        } else {
+        } 
+        else 
+        {
             int waitstatus;
             wait(&waitstatus);
             if (WIFEXITED(waitstatus)) 
             {
                 logger->PrintMessage("Process " + process.name + " success finished.");
-            } else {
+            } 
+            else 
+            {
                 logger->PrintMessage("Process " + process.name + " failed.");
             }     
         }
