@@ -15,7 +15,7 @@ int main()
   Parser yaml_parser;
   ProcessLauncher process_launcher;
   Logger* logger = Logger::GetLogger();
-  logger->SetSTDOutConfig(kLoggerMode, kLogFilePath);
+  logger->SetSTDOutConfig(kLoggerMode, kLoggerFilePath);
   logger->PrintMessage("Start application.");
   logger->PrintMessage("Startup YAML parser.");
   yaml_parser.SetFilePath(kProcessConfigurationFilePath);
