@@ -1,14 +1,9 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
-
 #include <unistd.h>
-//#include <sys/types.h>
 #include <sys/wait.h>
-//#include <stdlib.h>
 #include <fcntl.h>
-//#include <errno.h>
-
 #include "process_launcher.h"
 #include "logger.h"
 
@@ -43,7 +38,7 @@ void ProcessLauncher::SetProcessData(std::vector<DataProcess>& processes) {
         if(pid < 0) {
             // error
             logger->PrintMessage("Fork failed (process " + process.name + ")");
-            continue; //exit(EXIT_FAILURE);
+            continue;
         } else if(pid == 0) {
             // child process
             logger->PrintMessage("Run " + process.name + " process.");
@@ -70,9 +65,6 @@ void ProcessLauncher::SetProcessData(std::vector<DataProcess>& processes) {
             }
 
         } else {
-            // parent process
-            //wait(NULL);
-            //printf("done\n");
             int waitstatus;
             wait(&waitstatus);
             if (WIFEXITED(waitstatus)) {
