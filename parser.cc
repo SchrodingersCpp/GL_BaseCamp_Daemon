@@ -2,7 +2,6 @@
 #include "logger.h"
 
 #include <fstream>
-#include <cassert>
 #include <algorithm>
 
 Logger* logger = Logger::GetLogger();
@@ -11,22 +10,26 @@ Logger* logger = Logger::GetLogger();
 
 Parser::Parser()
 {
-  AddValidFlag(yamlFlags_::kFlagProcess,      "processes");
-  AddValidFlag(yamlFlags_::kFlagName,         "name");
-  AddValidFlag(yamlFlags_::kFlagExePath,      "executable-path");
-  AddValidFlag(yamlFlags_::kFlagStdoutConfig, "stdout-config");
-  AddValidFlag(yamlFlags_::kFlagFile,         "file");
-  AddValidFlag(yamlFlags_::kFlagMode,         "mode");
-  AddValidFlag(yamlFlags_::kFlagCmdArgs,      "cmd-arguments");
-  AddValidFlag(yamlFlags_::kFlagOptionName,   "option-name");
+  valid_yaml_flags_ = {
+    {YamlFlags::kFlagProcess,      "processes"},
+    {YamlFlags::kFlagName,         "name"},
+    {YamlFlags::kFlagExePath,      "executable-path"},
+    {YamlFlags::kFlagStdoutConfig, "stdout-config"},
+    {YamlFlags::kFlagFile,         "file"},
+    {YamlFlags::kFlagMode,         "mode"},
+    {YamlFlags::kFlagCmdArgs,      "cmd-arguments"},
+    {YamlFlags::kFlagOptionName,   "option-name"},
+  };
 }
 
 void Parser::SetFilePath(const std::string& path) { yaml_file_path_ = path; }
 
 std::vector<DataProcess> Parser::GetProcessData()
 {
-  ReadYAMLFile();
-  FillProcs();
+  if (ReadYAMLFile())
+  {
+    FillProcs();
+  }
   return procs_;
 }
 
@@ -34,20 +37,17 @@ std::vector<DataProcess> Parser::GetProcessData()
 
 /******** private members ********/
 
-// add valid flag name to list of valid YAML flags
-void Parser::AddValidFlag(const yamlFlags_& kFlag, const std::string& flagName)
-{
-  auto newPair{std::make_pair(kFlag, flagName)};
-  valid_yaml_flags_.insert(newPair);
-}
-
-void Parser::ReadYAMLFile()
+bool Parser::ReadYAMLFile()
 {
   logger->PrintMessage("Reading YAML file...");
   // open YAML-file
   std::ifstream yaml_file{yaml_file_path_};
   // check if YAML-file exists
-  assert((yaml_file.is_open() == true) && "File not found!");
+  if (!yaml_file.is_open())
+  {
+    logger->PrintMessage("File not found!");
+    return false;
+  }
   // read YAML-file content
   std::string yaml_line{};
   while (std::getline(yaml_file, yaml_line))
@@ -57,7 +57,8 @@ void Parser::ReadYAMLFile()
   // close YAML-file
   yaml_file.close();
   // check if YAML-content is valid
-  YAMLValidityCheck();
+  if (!YAMLValidityCheck()) { return false; }
+  return true;
 }
 
 // check if line is empty or consists of space and tab chars only
@@ -69,28 +70,34 @@ bool Parser::EmptyOrWhitespaceLine(const std::string& line)
   return isEmpty;
 }
 
-void Parser::YAMLValidityCheck()
+bool Parser::YAMLValidityCheck()
 {
   logger->PrintMessage("YAML content validity check...");
   for (const std::string& line : yaml_content_)
   {
-    SingleColonCheck(line);
+    if (!SingleColonCheck(line)) { return false; }
     AddFlagNameValuePair(line); // vectorize YAML-content
   }
-  ProcessFlagCheck();
-  ValidFlagsCheck();
-  std::vector<int> flagNamePos{}; // 'name' flag indices
-  GetFlagNameIndices(flagNamePos);
-  SingleFlagPerProcCheck(flagNamePos);
-  ModeValueCheck();
+  if (!ProcessFlagCheck()) { return false; }
+  if (!ValidFlagsCheck()) { return false; }
+  std::vector<int> flagNamePos; // 'name' flag indices
+  if (!GetFlagNameIndices(flagNamePos)) { return false; };
+  if (!SingleFlagPerProcCheck(flagNamePos)) { return false; };
+  if (!ModeValueCheck()) { return false; };
+  return true;
 }
 
 // check if line contains only one colon char
-void Parser::SingleColonCheck(const std::string& line)
+bool Parser::SingleColonCheck(const std::string& line)
 {
   // count colon char occurrences in line
   auto cnt{std::count(line.begin(), line.end(), ':')};
-  assert((cnt == 1) && "Only one colon is expected!");
+  if (cnt != 1)
+  {
+    logger->PrintMessage("Only one colon is expected!");
+    return false;
+  }
+  return true;
 }
 
 // get flag name and value from line
@@ -101,39 +108,45 @@ void Parser::AddFlagNameValuePair(const std::string& line)
   yaml_flag_value_.push_back(std::make_pair(flagName, flagValue));
 }
 
-void Parser::ProcessFlagCheck()
+bool Parser::ProcessFlagCheck()
 {
   // check if YAML-file begins with "processes" flag
-  assert((yaml_flag_value_[0].first ==
-          valid_yaml_flags_[yamlFlags_::kFlagProcess]) &&
-         "YAML file should start with 'processes' key!");
+  if (yaml_flag_value_[0].first != valid_yaml_flags_[YamlFlags::kFlagProcess])
+  {
+    logger->PrintMessage("YAML file should start with 'processes' key!");
+    return false;
+  }
   // delete first line since it is not needed anymore
   yaml_flag_value_.erase(yaml_flag_value_.begin());
   // check if "processes" occurs only once
   for (const auto& flagValuePair : yaml_flag_value_)
   {
-    assert(flagValuePair.first != valid_yaml_flags_[yamlFlags_::kFlagProcess]
-           && "Single occurrence of 'processes' flag is expected!");
+    if (flagValuePair.first == valid_yaml_flags_[YamlFlags::kFlagProcess])
+    {
+      logger->PrintMessage("Single occurrence of 'processes' flag is expected!");
+      return false;
+    }
   }
+  return true;
 }
 
 // get flag name from line
 std::string Parser::GetFlagName(const std::string& line)
 {
-  int i0{GetFlagNameBegin(line)};
-  int i1{GetFlagNameEnd(line)};
-  return line.substr(i0, i1 - i0 + 1);
+  int iBegin{GetFlagNameBegin(line)};
+  int iEnd{GetFlagNameEnd(line)};
+  return line.substr(iBegin, iEnd - iBegin + 1);
 }
 
 // get flag value from line
 std::string Parser::GetFlagValue(const std::string& line)
 {
-  int i0{GetFlagNameEnd(line) + 1}; // colon position
-  std::string flagValue{line.substr(i0)};
+  int iBegin{GetFlagNameEnd(line) + 1}; // colon position
+  std::string flagValue{line.substr(iBegin)};
   // trim trailing whitespace chars
   const std::string whitespace{" "};
-  int i1{static_cast<int>(flagValue.find_last_not_of(whitespace))};
-  flagValue = flagValue.substr(0, i1 + 1);
+  int iEnd{static_cast<int>(flagValue.find_last_not_of(whitespace))};
+  flagValue = flagValue.substr(0, iEnd + 1);
   if (flagValue.size() == 1) // if flagValue == ":"
   {
     flagValue = "";
@@ -141,8 +154,8 @@ std::string Parser::GetFlagValue(const std::string& line)
   else
   {
     // trim leading whitespace chars (exclude first colon char)
-    i0 = static_cast<int>(flagValue.find_first_not_of(whitespace, 1));
-    flagValue = flagValue.substr(i0);
+    iBegin = static_cast<int>(flagValue.find_first_not_of(whitespace, 1));
+    flagValue = flagValue.substr(iBegin);
   }
   return flagValue;
 }
@@ -163,7 +176,7 @@ int Parser::GetFlagNameEnd(const std::string& line)
 }
 
 // check if all flags are valid ones
-void Parser::ValidFlagsCheck()
+bool Parser::ValidFlagsCheck()
 {
   for (const auto& keyValuePair : yaml_flag_value_)
   {
@@ -176,38 +189,53 @@ void Parser::ValidFlagsCheck()
         break;
       }
     }
-    assert(isValidFlag && "Invalid flag!");
+    if (!isValidFlag)
+    {
+      logger->PrintMessage("Invalid flag!");
+      return false;
+    }
   }
+  return true;
 }
 
 // get 'name' flag indices to separate process data
-void Parser::GetFlagNameIndices(std::vector<int>& flagNamePos)
+bool Parser::GetFlagNameIndices(std::vector<int>& flagNamePos)
 {
   for (int i{0}; i < yaml_flag_value_.size(); ++i)
   {
-    if (yaml_flag_value_[i].first == valid_yaml_flags_[yamlFlags_::kFlagName])
+    if (yaml_flag_value_[i].first == valid_yaml_flags_[YamlFlags::kFlagName])
     {
       flagNamePos.push_back(i);
     }
   }
   // check first 'name' flag occurrence after 'processes' flag
-  assert((flagNamePos[0] == 0) && "'name' flag expected after 'processes'!");
+  if (flagNamePos[0] != 0)
+  {
+    logger->PrintMessage("'name' flag expected after 'processes'!");
+    return false;
+  }
+  return true;
 }
 
 // check allowed number of flags per process
-void Parser::SingleFlagPerProcCheck(std::vector<int>& flagNamePos)
+bool Parser::SingleFlagPerProcCheck(std::vector<int>& flagNamePos)
 {
   flagNamePos.push_back(static_cast<int>(yaml_flag_value_.size()));
   for (int i{0}; i < flagNamePos.size(); ++i)
   {
     // fill single process flags slice
-    std::vector<std::string> flagSlice{};
+    std::vector<std::string> flagSlice;
     for (int j{flagNamePos[i]}; j < flagNamePos[i + 1]; ++j)
     {
       flagSlice.push_back(yaml_flag_value_[j].first);
     }
-    assert(FlagOccurences(flagSlice) && "Redundant flags!");
+    if (!FlagOccurences(flagSlice))
+    {
+      logger->PrintMessage("Redundant flags!");
+      return false;
+    }
   }
+  return true;
 }
 
 // check flag occurrences in single process
@@ -217,7 +245,7 @@ bool Parser::FlagOccurences(const std::vector<std::string>& flagSlice)
   for (const auto& flag : flagSlice)
   {
     int nOccur{static_cast<int>(std::count(flagSlice.begin(), flagSlice.end(), flag))};
-    if (flag != valid_yaml_flags_[yamlFlags_::kFlagOptionName])
+    if (flag != valid_yaml_flags_[YamlFlags::kFlagOptionName])
     {
       if (nOccur != 1) { okOccur = false; }
     }
@@ -226,56 +254,67 @@ bool Parser::FlagOccurences(const std::vector<std::string>& flagSlice)
 }
 
 // check if "mode" flag value is valid
-void Parser::ModeValueCheck()
+bool Parser::ModeValueCheck()
 {
   for (const auto& keyValuePair : yaml_flag_value_)
   {
     std::string key{keyValuePair.first};
     std::string value{keyValuePair.second};
-    if (key == valid_yaml_flags_[yamlFlags_::kFlagMode])
+    if (key == valid_yaml_flags_[YamlFlags::kFlagMode])
     {
-      assert(((value == "append") || (value == "truncate")) &&
-             "Invalid 'mode' flag!");
+      if (((value != "append") && (value != "truncate")))
+      {
+        logger->PrintMessage("Invalid 'mode' flag!");
+        return false;
+      }
     }
   }
+  return true;
 }
 
 void Parser::FillProcs()
 {
   logger->PrintMessage("Filling process objects...");
+  DataProcess dataProc;
+  bool addProc{false}; // add process to vector
   for (const auto& keyValuePair : yaml_flag_value_)
   {
     std::string flag{keyValuePair.first};
     std::string value{keyValuePair.second};
-    if (flag == valid_yaml_flags_[yamlFlags_::kFlagName])
+    if (flag == valid_yaml_flags_[YamlFlags::kFlagName])
     {
-      procs_.push_back(DataProcess());
-      procs_.back().name = value;
+      // prevent adding empty process at first "name" occurrence
+      if (addProc) { procs_.push_back(dataProc); }
+      dataProc = {};
+      dataProc.name = value;
+      addProc = true;
     }
-    else if (flag == valid_yaml_flags_[yamlFlags_::kFlagExePath])
+    else if (flag == valid_yaml_flags_[YamlFlags::kFlagExePath])
     {
-      procs_.back().executable_path = value;
+      dataProc.executable_path = value;
     }
-    else if (flag == valid_yaml_flags_[yamlFlags_::kFlagFile])
+    else if (flag == valid_yaml_flags_[YamlFlags::kFlagFile])
     {
-      procs_.back().stdout_config.path = value;
+      dataProc.stdout_config.path = value;
     }
-    else if (flag == valid_yaml_flags_[yamlFlags_::kFlagMode])
+    else if (flag == valid_yaml_flags_[YamlFlags::kFlagMode])
     {
       if (value == "truncate")
       {
-        procs_.back().stdout_config.mode = STDOutMode::kSTDOutModeTruncate;
+        dataProc.stdout_config.mode = STDOutMode::kSTDOutModeTruncate;
       }
       else if (value == "append")
       {
-        procs_.back().stdout_config.mode = STDOutMode::kSTDOutModeAppend;
+        dataProc.stdout_config.mode = STDOutMode::kSTDOutModeAppend;
       }
     }
-    else if (flag == valid_yaml_flags_[yamlFlags_::kFlagOptionName])
+    else if (flag == valid_yaml_flags_[YamlFlags::kFlagOptionName])
     {
-      procs_.back().cmd_arguments.push_back(value);
+      dataProc.cmd_arguments.push_back(value);
     }
   }
+  // add last process
+  procs_.push_back(dataProc);
 }
 
 /******** end of private members ********/
