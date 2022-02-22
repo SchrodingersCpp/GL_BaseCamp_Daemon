@@ -13,7 +13,7 @@ class Parser: public IParser
   Parser();
   
   void SetFilePath(const std::string& path);
-  std::vector<DataProcess> GetProcessData();
+  std::vector<DataProcess> GetProcessData() override;
   
  private:
   enum class YamlFlags
