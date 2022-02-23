@@ -57,12 +57,11 @@ bool Parser::ReadYAMLFile()
   // close YAML-file
   yaml_file.close();
   // check if YAML-content is valid
-  if (!YAMLValidityCheck()) { return false; }
-  return true;
+  return YAMLValidityCheck();
 }
 
 // check if line is empty or consists of space and tab chars only
-bool Parser::EmptyOrWhitespaceLine(const std::string& line)
+bool Parser::EmptyOrWhitespaceLine(const std::string& line) const
 {
   const std::string whitespace{" \t"};
   const auto iBegin{line.find_first_not_of(whitespace)};
@@ -88,7 +87,7 @@ bool Parser::YAMLValidityCheck()
 }
 
 // check if line contains only one colon char
-bool Parser::SingleColonCheck(const std::string& line)
+bool Parser::SingleColonCheck(const std::string& line) const
 {
   // count colon char occurrences in line
   auto cnt{std::count(line.begin(), line.end(), ':')};
@@ -131,7 +130,7 @@ bool Parser::ProcessFlagCheck()
 }
 
 // get flag name from line
-std::string Parser::GetFlagName(const std::string& line)
+std::string Parser::GetFlagName(const std::string& line) const
 {
   int iBegin{GetFlagNameBegin(line)};
   int iEnd{GetFlagNameEnd(line)};
@@ -139,7 +138,7 @@ std::string Parser::GetFlagName(const std::string& line)
 }
 
 // get flag value from line
-std::string Parser::GetFlagValue(const std::string& line)
+std::string Parser::GetFlagValue(const std::string& line) const
 {
   int iBegin{GetFlagNameEnd(line) + 1}; // colon position
   std::string flagValue{line.substr(iBegin)};
@@ -161,7 +160,7 @@ std::string Parser::GetFlagValue(const std::string& line)
 }
 
 // flag name first char position in line
-int Parser::GetFlagNameBegin(const std::string& line)
+int Parser::GetFlagNameBegin(const std::string& line) const
 {
   const std::string tabChars{" -"};
   int flagBegin{};
@@ -170,13 +169,13 @@ int Parser::GetFlagNameBegin(const std::string& line)
 }
 
 // flag name last char position in line
-int Parser::GetFlagNameEnd(const std::string& line)
+int Parser::GetFlagNameEnd(const std::string& line) const
 {
   return static_cast<int>(line.find(':')) - 1;
 }
 
 // check if all flags are valid ones
-bool Parser::ValidFlagsCheck()
+bool Parser::ValidFlagsCheck() const
 {
   for (const auto& keyValuePair : yaml_flag_value_)
   {
@@ -199,11 +198,11 @@ bool Parser::ValidFlagsCheck()
 }
 
 // get 'name' flag indices to separate process data
-bool Parser::GetFlagNameIndices(std::vector<int>& flagNamePos)
+bool Parser::GetFlagNameIndices(std::vector<int>& flagNamePos) const
 {
   for (int i{0}; i < yaml_flag_value_.size(); ++i)
   {
-    if (yaml_flag_value_[i].first == valid_yaml_flags_[YamlFlags::kFlagName])
+    if (yaml_flag_value_.at(i).first == valid_yaml_flags_.at(YamlFlags::kFlagName))
     {
       flagNamePos.push_back(i);
     }
@@ -218,7 +217,7 @@ bool Parser::GetFlagNameIndices(std::vector<int>& flagNamePos)
 }
 
 // check allowed number of flags per process
-bool Parser::SingleFlagPerProcCheck(std::vector<int>& flagNamePos)
+bool Parser::SingleFlagPerProcCheck(std::vector<int>& flagNamePos) const
 {
   flagNamePos.push_back(static_cast<int>(yaml_flag_value_.size()));
   for (int i{0}; i < flagNamePos.size(); ++i)
@@ -239,32 +238,34 @@ bool Parser::SingleFlagPerProcCheck(std::vector<int>& flagNamePos)
 }
 
 // check flag occurrences in single process
-bool Parser::FlagOccurences(const std::vector<std::string>& flagSlice)
+bool Parser::FlagOccurences(const std::vector<std::string>& flagSlice) const
 {
   bool okOccur{true};
   for (const auto& flag : flagSlice)
   {
     int nOccur{static_cast<int>(std::count(flagSlice.begin(), flagSlice.end(), flag))};
-    if (flag != valid_yaml_flags_[YamlFlags::kFlagOptionName])
+    if (flag != valid_yaml_flags_.at(YamlFlags::kFlagOptionName))
     {
-      if (nOccur != 1) { okOccur = false; }
+      const int singleOccurence{1};
+      if (nOccur != singleOccurence) { okOccur = false; }
     }
   }
   return okOccur;
 }
 
 // check if "mode" flag value is valid
-bool Parser::ModeValueCheck()
+bool Parser::ModeValueCheck() const
 {
   for (const auto& keyValuePair : yaml_flag_value_)
   {
     std::string key{keyValuePair.first};
     std::string value{keyValuePair.second};
-    if (key == valid_yaml_flags_[YamlFlags::kFlagMode])
+    //if (key == valid_yaml_flags_[YamlFlags::kFlagMode])
+    if (key == valid_yaml_flags_.at(YamlFlags::kFlagMode))
     {
-      if (((value != "append") && (value != "truncate")))
+      if ((value != "append") && (value != "truncate"))
       {
-        logger->PrintMessage("Invalid 'mode' flag!");
+        logger->PrintMessage("Invalid 'mode' flag " + value + "!");
         return false;
       }
     }
@@ -272,7 +273,7 @@ bool Parser::ModeValueCheck()
   return true;
 }
 
-void Parser::FillProcs()
+bool Parser::FillProcs()
 {
   logger->PrintMessage("Filling process objects...");
   DataProcess dataProc;
@@ -284,6 +285,13 @@ void Parser::FillProcs()
     if (flag == valid_yaml_flags_[YamlFlags::kFlagName])
     {
       // prevent adding empty process at first "name" occurrence
+      /* Note: each time "name" flag is found, previous filled
+         process object is added to the vector and new (empty) process
+         object is initialized. If the first "name" flag is met
+         (first occurrence of "name" flag), there is no previous
+         process object. Thus, there is nothing to add to the vector
+         and that step is skipped.
+      */
       if (addProc) { procs_.push_back(dataProc); }
       dataProc = {};
       dataProc.name = value;
@@ -307,14 +315,29 @@ void Parser::FillProcs()
       {
         dataProc.stdout_config.mode = STDOutMode::kSTDOutModeAppend;
       }
+      else
+      {
+        logger->PrintMessage("Invalid 'stdout-config' flag value found "
+                             + value + "!");
+        return false;
+      }
     }
     else if (flag == valid_yaml_flags_[YamlFlags::kFlagOptionName])
     {
       dataProc.cmd_arguments.push_back(value);
     }
+    else if ((flag == valid_yaml_flags_[YamlFlags::kFlagStdoutConfig]) ||
+             (flag == valid_yaml_flags_[YamlFlags::kFlagCmdArgs]))
+    { ; } // skip valid flags without values
+    else
+    {
+      logger->PrintMessage("Incorrect flag found " + flag + "!");
+      return false;
+    }
   }
   // add last process
   procs_.push_back(dataProc);
+  return true;
 }
 
 /******** end of private members ********/
