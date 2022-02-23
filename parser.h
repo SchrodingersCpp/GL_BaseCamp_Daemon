@@ -35,21 +35,21 @@ class Parser: public IParser
   std::vector<DataProcess> procs_;
   
   bool ReadYAMLFile();
-  bool EmptyOrWhitespaceLine(const std::string& line);
+  bool EmptyOrWhitespaceLine(const std::string& line) const;
   bool YAMLValidityCheck();
-  bool SingleColonCheck(const std::string& line);
+  bool SingleColonCheck(const std::string& line) const;
   void AddFlagNameValuePair(const std::string& line);
   bool ProcessFlagCheck();
-  std::string GetFlagName(const std::string& line);
-  std::string GetFlagValue(const std::string& line);
-  int GetFlagNameBegin(const std::string& line);
-  int GetFlagNameEnd(const std::string& line);
-  bool ValidFlagsCheck();
-  bool GetFlagNameIndices(std::vector<int>& flagNamePos);
-  bool SingleFlagPerProcCheck(std::vector<int>& flagNamePos);
-  bool FlagOccurences(const std::vector<std::string>& flagSlice);
-  bool ModeValueCheck();
-  void FillProcs();
+  std::string GetFlagName(const std::string& line) const;
+  std::string GetFlagValue(const std::string& line) const;
+  int GetFlagNameBegin(const std::string& line) const;
+  int GetFlagNameEnd(const std::string& line) const;
+  bool ValidFlagsCheck() const;
+  bool GetFlagNameIndices(std::vector<int>& flagNamePos) const;
+  bool SingleFlagPerProcCheck(std::vector<int>& flagNamePos) const;
+  bool FlagOccurences(const std::vector<std::string>& flagSlice) const;
+  bool ModeValueCheck() const;
+  bool FillProcs();
 };
 
 #endif // PARSER_H
