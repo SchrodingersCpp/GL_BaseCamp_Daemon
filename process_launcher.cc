@@ -17,6 +17,17 @@ bool ProcessLauncher::IsPathExist(const std::string &path)
     return result;
 }
 
+char** ProcessLauncher::GetCmdArguments(const std::vector<std::string> cmd_arguments, std::string program_name) {
+    const char **argv = new const char *[cmd_arguments.size() + 2]; // + 2 = program_name, NULL
+    argv[0] = program_name.c_str();
+    // Copy args
+    for (size_t j = 0; j < cmd_arguments.size() + 1; ++j)
+        argv[j + 1] = cmd_arguments[j].c_str();
+    // End of arguments sentinel is NULL
+    argv[cmd_arguments.size() + 1] = NULL;
+    return const_cast<char**>(argv);
+}
+
 void ProcessLauncher::SetProcessData(const std::vector<DataProcess> &processes)
 {
     Logger *logger = Logger::GetLogger();
@@ -33,19 +44,11 @@ void ProcessLauncher::SetProcessData(const std::vector<DataProcess> &processes)
             logger->PrintMessage("Error run " + process.name + ". Stdout-config: file doesn't exist.");
             continue;
         }
-        pid_t pid;
-        const char **argv = new const char *[process.cmd_arguments.size() + 2]; // + 2 = program_name, NULL
-        argv[0] = process.name.c_str();
-        // Copy args
-        for (size_t j = 0; j < process.cmd_arguments.size() + 1; ++j)
-            argv[j + 1] = process.cmd_arguments[j].c_str();
-        // End of arguments sentinel is NULL
-        argv[process.cmd_arguments.size() + 1] = NULL;
         posix_spawn_file_actions_t action;
         int err = posix_spawn_file_actions_init(&action);
         if (err != 0)
         {
-            logger->PrintMessage("Error: posix_spawn_file_actions_init");
+            logger->PrintMessage("Error run " + process.name + ". posix_spawn_file_actions_init");
             continue;
         }
         STDOutMode mode = process.stdout_config.mode;
@@ -58,14 +61,15 @@ void ProcessLauncher::SetProcessData(const std::vector<DataProcess> &processes)
         {
             err = posix_spawn_file_actions_addopen(&action, 1, log_file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
         }
-
         if (err != 0)
         {
             logger->PrintMessage("Error: posix_spawn_file_actions_addopen");
             continue;
         }
+        pid_t pid;
+        char **argv = GetCmdArguments(process.cmd_arguments, process.name);
         logger->PrintMessage("Run " + process.name + " process.");
-        int status = posix_spawn(&pid, process.executable_path.c_str(), &action, NULL, const_cast<char **>(argv), environ);
+        int status = posix_spawn(&pid, process.executable_path.c_str(), &action, NULL, argv, environ);
         if (status == 0)
         {
             do

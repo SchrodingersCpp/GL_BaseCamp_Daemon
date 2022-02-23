@@ -7,6 +7,7 @@ class ProcessLauncher : public IProcessLauncher
 {
 private:
     bool IsPathExist(const std::string &path);
+    char **GetCmdArguments(const std::vector<std::string> cmd_arguments, std::string program_name);
 public:
     void SetProcessData(const std::vector<DataProcess>& processes) override;
 };
