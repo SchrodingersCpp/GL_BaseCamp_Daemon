@@ -4,5 +4,5 @@
 class IProcessLauncher
 {
   public:
-    virtual void SetProcessData(std::vector<DataProcess>& processes) = 0;  //Set data of prosesses
+    virtual void SetProcessData(const std::vector<DataProcess>& processes) = 0;  //Set data of prosesses
 };
